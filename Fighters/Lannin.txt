@@ -1,0 +1,18 @@
+Name:    Lannin
+HP  :       100
+Str :        17
+Skl :        12
+Spd :        12
+Luc :        14
+Def :        22
+Res :        22
+Weapon:     Sword
+Type:         0
+Mt  :        12
+Hit :       140
+Crit:         0
+Text:
+Abilities:
+Sol
+Patience
+43.17.12.12.14.22.23.0.12.140.0.Sol.Luna

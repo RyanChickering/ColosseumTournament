@@ -1,0 +1,8 @@
+Name:     Caleb
+HP  :        12
+Str :        23
+Skl :        42
+Spd :        11
+Luc :         3
+Def :        12
+Res :         4

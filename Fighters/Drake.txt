@@ -1,0 +1,17 @@
+Name:     Drake
+HP  :       125
+Str :        34
+Skl :        12
+Spd :         3
+Luc :        19
+Def :        23
+Res :         4
+Weapon:   Cleaver
+Type:         0
+Mt  :        14
+Hit :        90
+Crit:         0
+Text: You gon get cleaved
+Abilities:
+Counter
+HP+

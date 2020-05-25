@@ -1,0 +1,17 @@
+Name:      Troy
+HP  :       100
+Str :        25
+Skl :        20
+Spd :        15
+Luc :         7
+Def :        12
+Res :        12
+Weapon:       Bat
+Type:         0
+Mt  :         7
+Hit :       100
+Crit:        15
+Text: Who's up?
+Abilities:
+Colossus
+Gamble

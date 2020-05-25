@@ -1,0 +1,17 @@
+Name:      John
+HP  :       100
+Str :        18
+Skl :        23
+Spd :        34
+Luc :        21
+Def :         9
+Res :         6
+Weapon: Icepick
+Type:         0
+Mt  :         4
+Hit :        92
+Crt :        65
+Text: Are you ready for your lobotomy?
+Abilities: Hero
+Luna
+Veteran

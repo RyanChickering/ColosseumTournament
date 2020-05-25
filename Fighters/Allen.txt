@@ -1,0 +1,8 @@
+Name:     Allen
+HP  :        40
+Str :        12
+Skl :        34
+Spd :        15
+Luc :        12
+Def :        11
+Res :         9
