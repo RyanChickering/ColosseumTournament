@@ -1,4 +1,9 @@
-public class AbilityModule {
+/*
+Class that contains all the effects of the abilities.
+
+ */
+
+class AbilityModule {
     Fighter attacker;
     Fighter defender;
     int atkHP;
@@ -14,10 +19,20 @@ public class AbilityModule {
     4. bonus avo
     5. self inflicted damage
     6. bonus defense
-    7.
+    7. bonus HP
     8.
     9. Extra spaces for expansion
      */
+    final int DAMAGEUP = 0;
+    final int HITUP = 1;
+    final int CRITUP = 2;
+    final int BONUSHEALING = 3;
+    final int AVOIDUP = 4;
+    final int SELFDAMAGE = 5;
+    final int DAMAGEREDUCTION = 6;
+    final int BONUSHP = 7;
+    final int[] BASE = {0,0,0,0,0,0,0,0,0,0};
+
     int[] activeCall(){
         String ability = attacker.abilities[0];
         switch(ability){
@@ -32,7 +47,7 @@ public class AbilityModule {
             case "Counter":
                 return counter();
                 default:
-                    return new int[] {0,0,0,0,0,0,0,0,0,0};
+                    return BASE;
         }
     }
     int[] passiveCall(){
@@ -47,7 +62,7 @@ public class AbilityModule {
             case "Gamble":
                 return gamble();
             default:
-                return new int[] {0,0,0,0,0,0,0,0,0,0};
+                return BASE;
         }
     }
     AbilityModule(Fighter attacker, Fighter defender, int atkHP, int defHP){
@@ -59,100 +74,112 @@ public class AbilityModule {
     }
 
     private int[] sol(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         activation = attacker.skl()*2;
-        out[3] = 50;
+        out[BONUSHEALING] = 50;
         return out;
     }
 
     private int[] luna(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         activation = attacker.skl()*2;
-        out[0] = defender.def()/2;
+        out[DAMAGEUP] = defender.def()/2;
         return out;
     }
 
     private int[] colossus(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         activation = attacker.str()*15/10;
-        out[0] = attacker.str()/2;
+        out[DAMAGEUP] = attacker.str()/2;
         return out;
     }
 
     private int[] counter(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         phase = 1;
         activation = attacker.str();
-        out[0] = (defender.str() + defender.weapon.mt())/2;
+        out[DAMAGEUP] = (defender.str() + defender.weapon.mt())/2;
         return out;
     }
 
     private int[] corona(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         phase = 1;
         activation = (attacker.str()*3)/2;
-        out[4] = 30;
+        out[AVOIDUP] = 30;
         return out;
     }
 
     private int[] miracle(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         activation = (attacker.hp() - atkHP)/2;
-        out[6] = defender.str()+defender.weapon.mt()-attacker.def() - 1;
+        out[DAMAGEREDUCTION] = defender.str()+defender.weapon.mt()-attacker.def() - 1;
         return out;
     }
 
     //Passives beyond
 
+    //If speed is lower than opponent, increase hit and avoid by 20
     private int[] patience(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
         if(attacker.spd() < defender.spd()) {
-            out[1] = 20;
-            out[4] = 20;
+            out[HITUP] = 20;
+            out[AVOIDUP] = 20;
         }
         return out;
     }
+
+    //Decrease damage by 4 and increase crit by 25
     private int[] veteran(){
         activation = 100;
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
-        out[0] = -4;
-        out[2] = 25;
+        int[] out = BASE;
+        out[DAMAGEUP] = -4;
+        out[CRITUP] = 25;
         return out;
     }
+
+    //Decrease hit by 25 and increase crit by 25
     private int[] gamble(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
-        out[1] = -25;
-        out[2] = 25;
+        int[] out = BASE;
+        out[HITUP] = -25;
+        out[CRITUP] = 25;
         return out;
     }
+
+    //Increases HP by 25
     private int[] hpup(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
+        int[] out = BASE;
+        out[BONUSHP] = 25;
         //Just include the bonus HP in your build please.
         return out;
     }
 
+    //Adds 1/4 damage at the cost of 1/8th of own health per attack
     private int[] sacrifice() {
-        int[] out = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        out[0] = attacker.str() / 4;
-        out[5] = attacker.hp() / 8;
+        int[] out = BASE;
+        out[DAMAGEUP] = attacker.str() / 4;
+        out[SELFDAMAGE] = attacker.hp() / 8;
         return out;
     }
 
+    //Increases crit by 15
     private int[] critup(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
-        out[2] = 15;
+        int[] out = BASE;
+        out[CRITUP] = 15;
         return out;
     }
 
+    //Heals 1/20th of health per turn
     private int[] renewal(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
-        out[3] = attacker.hp()/20;
+        int[] out = BASE;
+        out[BONUSHEALING] = attacker.hp()/20;
         return out;
     }
 
+    //Provides a portion of luck as defense
     private int[] shieldOfFaith(){
-        int[] out = {0,0,0,0,0,0,0,0,0,0};
-        out[4] = attacker.luc();
+        int[] out = BASE;
+        out[DAMAGEREDUCTION] = attacker.luc();
         return out;
     }
 

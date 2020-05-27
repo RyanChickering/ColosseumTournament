@@ -2,10 +2,10 @@
  */
 
 public class BattleStats {
-    public int power;
-    public int hit;
-    public int crit;
-    public int as;
+    int power;
+    int hit;
+    int crit;
+    int as;
     int[] modifiers;
     public BattleStats(Fighter attacker, Fighter defender){
         if(attacker.weapon.type == 0) {
@@ -19,9 +19,9 @@ public class BattleStats {
             avoid = 0;
         }
         modifiers = ability.passiveCall();
-        power += modifiers[0];
-        hit = attacker.weapon.hit() + attacker.skl()*2 - defender.spd()*2 - defender.luc() + modifiers[1] - avoid;
-        crit = attacker.weapon.crit() + attacker.skl()/2 - defender.luc() + modifiers[2];
+        power += modifiers[ability.DAMAGEUP];
+        hit = attacker.weapon.hit() + attacker.skl()*2 - defender.spd()*2 - defender.luc() + modifiers[ability.HITUP] - avoid;
+        crit = attacker.weapon.crit() + attacker.skl()/2 - defender.luc() + modifiers[ability.AVOIDUP];
         as = attacker.spd()-defender.spd();
         if(power < 0){
             power = 0;

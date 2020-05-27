@@ -2,19 +2,27 @@ import java.io.*;
 import java.util.*;
 
 //Class type for all fighters
+
+
 public class Fighter
 {
+    final static int NUMSTATS = 7;
+    final static int NUMWSTATS = 3;
+    final static int HIT = 1;
+    final static int CRIT = 2;
     String name;
-    private String[] statNames = {"HP","Str","Skl","Spd","Luc","Def","Res"};
-    private int[] fstats = new int[7];
-    public String[] abilities = new String[2];
-    public Weapon weapon = new Weapon(0,0,0);
+    String[] statNames = {"HP","Str","Skl","Spd","Luc","Def","Res", "Mt", "Hit", "Crit"};
+    int[] fstats = new int[NUMSTATS];
+    int[] cumstats = new int[5];
+    String[] abilities = new String[2];
+    Weapon weapon = new Weapon(0,0,0);
 
     public class Weapon{
-        public int[] wstats = new int[3];
-        public String name;
-        public String flavor;
-        public int type;
+        int[] wstats = new int[3];
+        String[] wnames = {"Mt", "Hit", "Crit"};
+        String name;
+        String flavor;
+        int type;
             Weapon(int mt, int hit, int crit){
                 this.name = "";
                 this.flavor = "";
@@ -31,47 +39,51 @@ public class Fighter
                 wstats[1] = hit;
                 wstats[2] = crit;
             }
-            public int mt(){
+            int mt(){
                 return wstats[0];
             }
-            public int hit(){
+            int hit(){
                 return wstats[1];
             }
-            public int crit(){
+            int crit(){
                 return wstats[2];
             }
     }
 
     /* Easy to return stats*/
-    public int hp(){
+    int hp(){
         return fstats[0];
     }
-    public int str(){
+    int str(){
         return fstats[1];
     }
-    public int skl(){
+    int skl(){
         return fstats[2];
     }
-    public int spd(){
+    int spd(){
         return fstats[3];
     }
-    public int luc(){
+    int luc(){
         return fstats[4];
     }
-    public int def(){
+    int def(){
         return fstats[5];
     }
-    public int res(){
+    int res(){
         return fstats[6];
     }
 
 
-    public Fighter() throws IOException{
+    Fighter() throws IOException{
         getInput();
         writeFile();
     }
 
-    public Fighter(int[] stats, String[]abilities, String name){
+    Fighter(boolean check){
+
+    }
+
+    Fighter(int[] stats, String[]abilities, String name){
         this.name = name;
         for(int i = 0; i < 7; i++) {
             fstats[i] = stats[i];
@@ -83,6 +95,19 @@ public class Fighter
         this.abilities[1] = abilities[1];
     }
 
+    int[] calcFinals(){
+        //total might
+        cumstats[0] = this.str() + this.weapon.mt();
+        //hit
+        cumstats[1] = 2*this.skl() + this.luc() + this.weapon.hit();
+        //avo
+        cumstats[2] = 2*this.spd() + this.luc();
+        //crit
+        cumstats[3] = this.skl()/2 + this.weapon.crit();
+        //ddg
+        cumstats[4] = this.luc();
+        return cumstats;
+    }
 
     private void getInput()
     {
@@ -144,7 +169,7 @@ public class Fighter
         String out = "";
         for(int i = 0; i < 6; i++)
         {
-            out += statNames[i] + " = " + fstats[i] + " ";
+            out += statNames[i] + " = " + fstats[i] + " " + "\n";
         }
         return out;
     }
