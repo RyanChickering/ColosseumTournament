@@ -157,7 +157,7 @@ public class Fighter
 
     }
 
-    private void writeFile() throws IOException
+    void writeFile() throws IOException
     {
         String charDirectory = System.getProperty("user.dir") + "/Fighters";
         File filePath = new File(charDirectory);

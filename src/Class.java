@@ -18,7 +18,23 @@ class Class {
                         "Bishop",
                         new String[]{"Corona", "Miracle"},
                         new String[]{"Sacrifice", "Renewal"}
+                ),
+                new Class(
+                        "General",
+                        new String[]{"Bonfire", "Pavise"},
+                        new String[]{"WaryFighter", "Resolve"}
+                ),
+                new Class(
+                        "Berserker",
+                        new String[]{"Guts", "Colossus"},
+                        new String[]{"Axefaire", "Crit+"}
+                ),
+                new Class(
+                        "Assassin",
+                        new String[]{"Lethality", "PoisonedBlade"},
+                        new String[]{"Avoid+", "Precision"}
                 )
+
 
         };
     }

@@ -8,18 +8,20 @@ public class BattleStats {
     int as;
 
     BattleStats(Fighter attacker, Fighter defender, int one){
-        if(attacker.weapon.type == 0) {
-            this.power = attacker.str() + attacker.weapon.wstats[0] - defender.def();
-        } else {
-            this.power = attacker.str() + attacker.weapon.wstats[0] - defender.res();
-        }
         AbilityModule attackerAbilities = new AbilityModule(attacker, defender, attacker.hp(), defender.hp());
         AbilityModule defenderAbilities = new AbilityModule(defender, attacker, defender.hp(), attacker.hp());
 
         int[] modifiers = attackerAbilities.passiveCall();
         int[] defenderModifiers = defenderAbilities.passiveCall();
-        power += modifiers[attackerAbilities.DAMAGEUP]
-                - defenderModifiers[defenderAbilities.DAMAGEREDUCTION];
+
+        if(attacker.weapon.type == 0) {
+            this.power = attacker.str() + attacker.weapon.wstats[0] + modifiers[attackerAbilities.DAMAGEUP]
+                    - defender.def() - defenderModifiers[defenderAbilities.DAMAGEREDUCTION];
+        } else {
+            this.power = attacker.str() + attacker.weapon.wstats[0] + modifiers[attackerAbilities.DAMAGEUP]
+                    - defender.res() - defenderModifiers[defenderAbilities.DAMAGEREDUCTION];;
+        }
+
         hit = attacker.weapon.hit() + attacker.skl()*2 + modifiers[attackerAbilities.HITUP]
                 - defender.spd()*2 - defender.luc()  - defenderModifiers[defenderAbilities.AVOIDUP];
         crit = attacker.weapon.crit() + attacker.skl()/2 + modifiers[attackerAbilities.CRITUP]
