@@ -9,8 +9,8 @@ import java.util.HashMap;
 class AbilityModule {
     private Fighter attacker;
     private Fighter defender;
-    private int atkHP;
-    private int defHP;
+    int atkHP;
+    int defHP;
     private int activation;
     //returns an array of values of possible things that are effected
     /* key:
@@ -24,6 +24,7 @@ class AbilityModule {
     7. bonus HP
     8. DDGUP
     9. Damage over time
+    10. Extra attack
      */
     final int DAMAGEUP = 0;
     final int HITUP = 1;
@@ -37,7 +38,9 @@ class AbilityModule {
     final int BONUSHP = 7;
     final int DDGUP = 8;
     final int DOT = 9;
-    final int[] BASE = {0,0,0,0,0,0,0,0,0,0};
+    final int EXTRA_ATTACK = 10;
+    private final int infinity = 100000;
+    final int[] BASE = {0,0,0,0,0,0,0,0,0,0,0};
     private HashMap<String, ActiveSkill> activeSkillMap = new HashMap<>();
     private HashMap<String, Skill> passiveSkillMap = new HashMap<>();
 
@@ -47,6 +50,14 @@ class AbilityModule {
 
     int[] passiveCall(){
         return passiveSkillMap.get(attacker.abilities[PASSIVE].toLowerCase()).effect(attacker, defender);
+    }
+
+    int[] passiveCall(String skillname){
+        try {
+            return passiveSkillMap.get(skillname.toLowerCase()).effect(attacker, defender);
+        } catch(Exception e){
+            return BASE;
+        }
     }
 
     int getActivation(){
@@ -59,6 +70,14 @@ class AbilityModule {
 
     boolean canCrit(){
         return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).canCrit();
+    }
+
+    void setAttacker(Fighter fighter){
+        attacker = fighter;
+    }
+
+    void setDefender(Fighter fighter){
+        defender = fighter;
     }
 
     AbilityModule(){
@@ -90,6 +109,12 @@ class AbilityModule {
         activeSkillMap.put("bonfire", new Bonfire());
         activeSkillMap.put("lethality", new Lethality());
         activeSkillMap.put("poisonedblade", new PoisonedBlade());
+        activeSkillMap.put("pierce", new Luna("Pierce"));
+        activeSkillMap.put("deadeye", new Deadeye());
+        activeSkillMap.put("sureshot", new SureShot());
+        activeSkillMap.put("adept", new Adept());
+        activeSkillMap.put("starstorm", new StarStorm());
+        activeSkillMap.put("flare", new Colossus("Flare"));
     }
     
     private void buildPassiveMap(){
@@ -107,14 +132,8 @@ class AbilityModule {
         passiveSkillMap.put("waryfighter", new WaryFighter());
         passiveSkillMap.put("avoid+", new AvoidUp());
         passiveSkillMap.put("precision", new Precision());
-    }
-
-    void setAttacker(Fighter attacker){
-        this.attacker = attacker;
-    }
-
-    void setDefender(Fighter defender){
-        this.defender = defender;
+        passiveSkillMap.put("empoweredmagic", new EmpoweredMagic());
+        passiveSkillMap.put("eagleeye", new EagleEye());
     }
 
     boolean onAttack(){
@@ -147,8 +166,8 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill*2 percent chance to\n" +
-                    "recover damage equal to half\n" +
+            return "Skill*2 percent chance to " +
+                    "recover damage equal to half " +
                     "of the damage dealt.";
         }
 
@@ -185,7 +204,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill percent chance to gain 15 hit\n" +
+            return "Skill percent chance to gain 15 hit " +
                     "and 10 attack for a whole round";
         }
 
@@ -207,7 +226,12 @@ class AbilityModule {
     }
 
     class Luna implements ActiveSkill{
+        String name = "Luna";
         Luna(){
+        }
+
+        Luna(String name){
+            this.name = name;
         }
 
         public boolean onAttack(){
@@ -223,8 +247,8 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill*2 chance to inflict\n" +
-                    "bonus damage equal to half of\n" +
+            return "Skill*2 chance to inflict " +
+                    "bonus damage equal to half of " +
                     "the opponent's defense";
         }
 
@@ -267,7 +291,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Str * 1.5 chance to deal\n" +
+            return "Str * 1.5 chance to deal " +
                     "bonus damage equal to str/2";
         }
 
@@ -305,7 +329,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Str percent chance to return\n" +
+            return "Str percent chance to return " +
                     "half the damage dealt";
         }
 
@@ -426,7 +450,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill*2 percent chance to deal\n" +
+            return "Skill*2 percent chance to deal " +
                     "15% of the opponent's health";
         }
 
@@ -466,7 +490,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Luck% chance to revive \n" +
+            return "Luck% chance to revive  " +
                     "with 20% of max HP";
         }
 
@@ -502,7 +526,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Def% chance to block all incoming\n" +
+            return "Def% chance to block all incoming " +
                     "damage.";
         }
 
@@ -512,7 +536,7 @@ class AbilityModule {
 
         public int[] effect(Fighter attacker, Fighter defender){
             int[] out = Arrays.copyOf(BASE, BASE.length);
-            out[DAMAGEREDUCTION] = 100000;
+            out[DAMAGEREDUCTION] = infinity;
             return out;
         }
 
@@ -542,7 +566,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill/2% chance to halve the\n" +
+            return "Skill/2% chance to halve the " +
                     "enemy's health.";
         }
 
@@ -583,7 +607,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill*2 chance to inflict\n" +
+            return "Skill*2 chance to inflict " +
                     "a poison stack on the enemy.";
         }
 
@@ -615,8 +639,8 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Skill*2% chance to\n" +
-                    "increase attack by 20% of \n" +
+            return "Skill*2% chance to " +
+                    "increase attack by 20% of  " +
                     "defense";
         }
 
@@ -635,6 +659,156 @@ class AbilityModule {
         }
     }
 
+    class Deadeye implements ActiveSkill{
+        Deadeye(){
+        }
+
+        public boolean onAttack(){
+            return true;
+        }
+
+        public int duration(){
+            return 0;
+        }
+
+        public String name(){
+            return "Deadeye";
+        }
+
+        public String desc(){
+            return "Skill*2% chance to " +
+                    "increase hit and " +
+                    "critical by 20";
+        }
+
+        public boolean canCrit(){
+            return true;
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender){
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[CRITUP] = 20;
+            out[HITUP] = 20;
+            return out;
+        }
+
+        public int activationRate(Fighter attacker, Fighter defender){
+            return attacker.skl()*2;
+        }
+    }
+
+    class SureShot implements ActiveSkill{
+        SureShot(){
+        }
+
+        public boolean onAttack(){
+            return true;
+        }
+
+        public int duration(){
+            return 0;
+        }
+
+        public String name(){
+            return "SureShot";
+        }
+
+        public String desc(){
+            return "Skill% chance that the  " +
+                    "next attack will " +
+                    "never miss and deals " +
+                    "20% bonus damae";
+        }
+
+        public boolean canCrit(){
+            return true;
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender){
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[HITUP] = infinity;
+            BattleStats stats = new BattleStats(attacker, defender);
+            out[DAMAGEUP] = stats.power/5;
+            return out;
+        }
+
+        public int activationRate(Fighter attacker, Fighter defender){
+            return attacker.skl()*2;
+        }
+    }
+
+    class Adept implements ActiveSkill {
+        Adept() {
+        }
+
+        public boolean onAttack() {
+            return true;
+        }
+
+        public int duration() {
+            return 1;
+        }
+
+        public String name() {
+            return "Adept";
+        }
+
+        public String desc() {
+            return "Skill% chance to gain a " +
+                    "bonus followup attack.";
+        }
+
+        public boolean canCrit() {
+            return true;
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender) {
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[EXTRA_ATTACK] = 1;
+            return out;
+        }
+
+        public int activationRate(Fighter attacker, Fighter defender) {
+            return attacker.skl();
+        }
+    }
+
+    class StarStorm implements ActiveSkill {
+        StarStorm() {
+        }
+
+        public boolean onAttack() {
+            return true;
+        }
+
+        public int duration() {
+            return 4;
+        }
+
+        public String name() {
+            return "Star Storm";
+        }
+
+        public String desc() {
+            return "Skill% chance to perform " +
+                    "a flurry of 5 attacks";
+        }
+
+        public boolean canCrit() {
+            return false;
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender) {
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[EXTRA_ATTACK] = 4;
+            return out;
+        }
+
+        public int activationRate(Fighter attacker, Fighter defender) {
+            return attacker.skl();
+        }
+    }
+
     //Passives beyond
 
     class Patience implements Skill{
@@ -646,7 +820,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "If this unit's speed is lower\n Than" +
+            return "If this unit's speed is lower  Than" +
                     "the opponent's, hit and avoid + 20";
         }
 
@@ -669,7 +843,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Decrease damage by 4 and increase\n" +
+            return "Decrease damage by 4 and increase " +
                     "critical by 25";
         }
 
@@ -693,7 +867,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Decreases hit by 25 and increases\n" +
+            return "Decreases hit by 25 and increases " +
                     "critical by 25";
         }
 
@@ -737,7 +911,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Increases damage by 1/4 of str\n" +
+            return "Increases damage by 1/4 of str " +
                     "at the cost of 1/8 HP each turn";
         }
 
@@ -821,7 +995,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Increases dodge and avoid by 20\n" +
+            return "Increases dodge and avoid by 20 " +
                     "when under 33% health";
         }
 
@@ -844,7 +1018,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Increases hit by 5 for each point\n" +
+            return "Increases hit by 5 for each point " +
                     "invested in strength";
         }
 
@@ -864,7 +1038,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Increases strength, skill, and speed\n" +
+            return "Increases strength, skill, and speed " +
                     "by 5 while under 50% HP.";
         }
 
@@ -889,14 +1063,14 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Reduces damage based on difference\n" +
-                    "in speed. Increases attack against\n" +
+            return "Reduces damage based on difference " +
+                    "in speed. Increases attack against " +
                     "opponents you outspeed.";
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
             int[] out = Arrays.copyOf(BASE, BASE.length);
-            out[DAMAGEREDUCTION] = ((defender.spd() - attacker.spd())*5)/2;
+            out[DAMAGEREDUCTION] = (defender.str()*(defender.spd() - attacker.spd())/2)+1;
             if(out[DAMAGEREDUCTION] < 0){
                 out[DAMAGEREDUCTION] = 0;
                 out[DAMAGEUP] = (attacker.str()*23)/20;
@@ -933,7 +1107,7 @@ class AbilityModule {
         }
 
         public String desc(){
-            return "Increases the damage done \n" +
+            return "Increases the damage done  " +
                     "by criticals";
         }
 
@@ -943,6 +1117,54 @@ class AbilityModule {
             return out;
         }
     }
+
+    class EagleEye implements Skill{
+        EagleEye(){
+        }
+
+        public String name(){
+            return "Eagle Eye";
+        }
+
+        public String desc(){
+            return "Increases hit by 10, " +
+                    "critical by 10, and " +
+                    "power by 1.";
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender){
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[DAMAGEUP] = 1;
+            out[HITUP] = 10;
+            out[CRITUP] = 10;
+            return out;
+        }
+    }
+
+    class EmpoweredMagic implements Skill{
+        EmpoweredMagic(){
+        }
+
+        public String name(){
+            return "Empowered Magic";
+        }
+
+        public String desc(){
+            return "Increases damage at " +
+                    "the cost of health";
+        }
+
+        public int[] effect(Fighter attacker, Fighter defender){
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[DAMAGEUP] = attacker.str()/3;
+            if(atkHP-out[DAMAGEUP] > attacker.str()/5) {
+                out[SELFDAMAGE] = attacker.str() / 5;
+            }
+            return out;
+        }
+    }
+
+
 
 
 }

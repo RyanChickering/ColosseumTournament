@@ -93,6 +93,7 @@ public class Fighter
         this.weapon.wstats[0] = 2;
         this.weapon.wstats[1] = 70;
         this.weapon.wstats[2] = 0;
+        this.name = "Enter a name";
     }
 
     Fighter(int[] stats, String[]abilities, String name){
@@ -192,6 +193,25 @@ public class Fighter
             out += statNames[i] + " = " + fstats[i] + " " + "\n";
         }
         return out;
+    }
+
+    String fighterData(){
+        return String.format("%-10s%10d%-10s%11d%-10s%11d" +
+                        "%-10s%11d%-10s%11d%-10s%11d" +
+                        "%-10s%11d%-10s%11d%-10s%11d" +
+                        "%-10s%11d%-10s%13s%-10s%13s",
+                "HP: ", this.hp(),
+                "\nStr: ", this.str(),
+                "\nSkl: ", this.skl(),
+            "\nSpd: ", this.spd(),
+            "\nLuc: ", this.luc(),
+            "\nDef: ", this.def(),
+            "\nRes: ", this.res(),
+            "\nMight: ", this.weapon.mt(),
+            "\nHit: ", this.weapon.hit(),
+            "\nCrit: ", this.weapon.crit(),
+            "\nActive: ", this.abilities[0],
+            "\nPassive: ", this.abilities[1]);
     }
 
 }

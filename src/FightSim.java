@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.io.File;
@@ -23,13 +24,11 @@ public class FightSim {
     private static JComboBox<String> fighter1Select;
     private static JComboBox<String> fighter2Select;
     private static JPanel skillPickers;
-    private static StringBuilder simulationText;
-    private final static int TOTALALLOWED = 120;
-    private final static int WEAPONALLOWED = 25;
+    private final static int TOTALALLOWED = 130;
+    private final static int WEAPONALLOWED = 32;
     private static final AbilityModule ABILITY_MODULE = new AbilityModule();
-    private static final int CRIT_MODIFIER = 2;
-    private static final int[] BASE = {0,0,0,0,0,0,0,0,0,0};
     private static JFrame mainFrame;
+    private static ArrayList<JTextArea> textAreaList;
 
     //It's pretty self explanatory
     public static void main(String[] args){
@@ -37,10 +36,13 @@ public class FightSim {
     }
 
     private static void buildUI(){
+        textAreaList = new ArrayList<>();
         mainFrame = new JFrame("Colosseum Tournament");
         fighter1Select = new JComboBox<>(getFighterFiles());
         fighter2Select = new JComboBox<>(getFighterFiles());
         JButton createFighter = new JButton("Create new fighter");
+        JButton editFighter1 = new JButton("Edit Fighter 1");
+        JButton editFighter2 = new JButton("Edit Fighter 2");
         fighter1 = loadFighter(fighter1Select.getItemAt(fighter1Select.getSelectedIndex()));
         fighter1Stats = new JPanel();
         if(fighter1 != null) {
@@ -63,32 +65,49 @@ public class FightSim {
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.ipadx = 60;
-        constraints.ipady = 140;
+        constraints.gridheight = 3;
         mainFrame.add(fighter1Stats, constraints);
         constraints.gridx = 1;
         constraints.gridy = 1;
         constraints.ipadx = 60;
-        constraints.ipady = 140;
+        constraints.gridheight = 3;
         mainFrame.add(fighter2Stats, constraints);
         constraints.gridx = 2;
         constraints.gridy = 0;
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         mainFrame.add(createFighter, constraints);
         constraints.gridx = 2;
         constraints.gridy = 1;
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        mainFrame.add(editFighter1, constraints);
+        constraints.gridx = 2;
+        constraints.gridy = 2;
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        mainFrame.add(editFighter2,constraints);
+        constraints.gridx = 2;
+        constraints.gridy = 3;
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         mainFrame.add(runSim, constraints);
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        mainFrame.setSize(500,500);
+        mainFrame.setSize(700,400);
         mainFrame.setVisible(true);
         fighter1Select.addActionListener(e -> selectionChange(mainFrame, fighter1Select, 0));
         fighter2Select.addActionListener(e -> selectionChange(mainFrame, fighter2Select, 1));
-        createFighter.addActionListener(e -> createFighterWindow());
+        createFighter.addActionListener(e -> createFighterWindow(new Fighter()));
+        editFighter1.addActionListener(e -> createFighterWindow(fighter1));
+        editFighter2.addActionListener(e -> createFighterWindow(fighter2));
         runSim.addActionListener(e -> simulate());
     }
 
     private static void simulate(){
         JFrame frame = new JFrame("Simulation");
         JTextArea battleOutput = new JTextArea(printReadout(
-                new BattleStats(fighter1, fighter2, 1), new BattleStats(fighter2, fighter1, 1)) + runSim());
+                new BattleStats(fighter1, fighter2, 1), new BattleStats(fighter2, fighter1, 1))
+                + new Simulator().runSim(fighter1, fighter2));
         JScrollPane scrollPane = new JScrollPane(battleOutput);
         frame.add(scrollPane);
         frame.setSize(400, 600);
@@ -97,40 +116,53 @@ public class FightSim {
     }
 
     //method that opens UI to make a new fighter
-    private static void createFighterWindow(){
-        Fighter newFighter = new Fighter();
+    private static void createFighterWindow(Fighter newFighter){
         JFrame frame = new JFrame("Create Fighter");
         JTextArea readout = battleStatPanel(newFighter);
         JPanel stats = statsPanel(newFighter, readout);
         JPanel weapon = weaponPanel(newFighter, readout);
-        JPanel skills = skillPicker(newFighter);
+        JPanel skills = skillPicker(newFighter, readout);
         JButton save = new JButton("Save and complete");
-        JTextField name = new JTextField("Enter a name");
+        JTextField name = new JTextField(newFighter.name);
         frame.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
+        constraints.gridy = 4;
+        constraints.gridwidth = 2;
+        constraints.anchor = GridBagConstraints.CENTER;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 0.75;
+        frame.add(skills, constraints);
+        constraints.gridx = 0;
+        constraints.ipadx = 0;
         constraints.gridy = 0;
-        //constraints.gridwidth = 2;
-        //constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.gridwidth = 2;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         frame.add(name, constraints);
         constraints.gridx = 0;
+        constraints.gridwidth = 1;
         constraints.gridy = 1;
         constraints.gridheight = 2;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 0.25;
         frame.add(stats, constraints);
         constraints.gridx = 1;
         constraints.gridy = 1;
+        constraints.ipadx = 0;
+        constraints.gridheight = 1;
+        constraints.gridwidth = 1;
         constraints.anchor = GridBagConstraints.NORTHWEST;
         frame.add(weapon, constraints);
-        constraints.gridx = 0;
-        constraints.gridy = 4;
-        constraints.gridwidth = 2;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        frame.add(skills, constraints);
         constraints.gridx = 2;
-        constraints.gridy = 1;
+        constraints.gridy = 0;
+        //constraints.ipadx = 100;
+        constraints.gridheight = 2;
+        constraints.gridwidth = 1;
         frame.add(readout,constraints);
         constraints.gridx = 2;
         constraints.gridy = 4;
+        constraints.gridheight = 1;
         frame.add(save, constraints);
         save.addActionListener(new ActionListener() {
             @Override
@@ -141,58 +173,65 @@ public class FightSim {
                 } catch(Exception ex){
                     throwError("Error writing file");
                 }
-                fighter1Select = new JComboBox<>(getFighterFiles());
-                fighter2Select = new JComboBox<>(getFighterFiles());
+                mainFrame.dispose();
                 frame.dispose();
-                mainFrame.revalidate();
-                mainFrame.repaint();
+                buildUI();
             }
         });
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(700,500);
+        frame.setSize(700,400);
         frame.setVisible(true);
     }
 
-    private static JPanel skillPicker(Fighter fighter){
+    //Creates the panel that contains the class picker and skill pickers
+    private static JPanel skillPicker(Fighter fighter, JTextArea readout){
         JPanel skillPanel = new JPanel();
         Class classes = new Class();
         Class[] classlist = classes.classList();
         JComboBox classPicker = new JComboBox<>(classes.classNames());
-        skillPickers = skillPickers(classlist[classPicker.getSelectedIndex()], fighter);
+        skillPickers = skillPickers(classlist[classPicker.getSelectedIndex()], fighter, readout);
         skillPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.gridwidth = 2;
+        constraints.weightx = 1.0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         skillPanel.add(classPicker, constraints);
         constraints.gridx = 0;
         constraints.gridy = 1;
         skillPanel.add(skillPickers, constraints);
-        classPicker.addActionListener(e -> updateSkillPickers(skillPanel, classlist, classPicker, fighter));
+        classPicker.addActionListener(e -> updateSkillPickers(skillPanel, classlist, classPicker, fighter, readout));
         return skillPanel;
     }
 
-    private static void updateSkillPickers(JPanel skillPanel, Class[] classlist, JComboBox classPicker, Fighter fighter){
+    //Updates the skill pickers when the class is changed
+    private static void updateSkillPickers(JPanel skillPanel, Class[] classlist,
+                                           JComboBox classPicker, Fighter fighter, JTextArea readout){
         skillPanel.remove(skillPickers);
-        skillPickers = skillPickers(classlist[classPicker.getSelectedIndex()], fighter);
+        skillPickers = skillPickers(classlist[classPicker.getSelectedIndex()], fighter, readout);
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
+        constraints.weightx = 1.0;
         constraints.gridy = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         skillPanel.add(skillPickers, constraints);
         skillPanel.revalidate();
         skillPanel.repaint();
     }
 
-    private static void setSkill(Fighter fighter, boolean active, JComboBox<String> select, JTextArea desc){
+    //When a skill is selected, sets the skill of the fighter to that skill
+    private static void setSkill(Fighter fighter, boolean active, JComboBox<String> select,
+                                 JTextArea desc, JTextArea readout){
         if(active) {
             fighter.abilities[ABILITY_MODULE.ACTIVE] = select.getItemAt(select.getSelectedIndex());
         } else {
             fighter.abilities[ABILITY_MODULE.PASSIVE] = select.getItemAt(select.getSelectedIndex());
+            refreshBattleStats(readout, fighter);
         }
         desc.setText(ABILITY_MODULE.skillDesc(select.getItemAt(select.getSelectedIndex())));
     }
 
-    private static JPanel skillPickers(Class fighterClass, Fighter fighter){
+    private static JPanel skillPickers(Class fighterClass, Fighter fighter, JTextArea readout){
         JPanel skillPanel = new JPanel();
         JComboBox<String> activeSkill = new JComboBox<>(fighterClass.activeSkills);
         JTextArea activeDesc = new JTextArea(
@@ -201,9 +240,15 @@ public class FightSim {
         JTextArea passiveDesc = new JTextArea(
                 ABILITY_MODULE.skillDesc(passiveSkill.getItemAt(passiveSkill.getSelectedIndex())));
         skillPanel.setLayout(new GridBagLayout());
+        activeDesc.setLineWrap(true);
+        passiveDesc.setLineWrap(true);
+        activeDesc.setWrapStyleWord(true);
+        passiveDesc.setWrapStyleWord(true);
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
+        constraints.weightx = 0.5;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         skillPanel.add(activeSkill, constraints);
         constraints.gridx = 1;
         constraints.gridy = 0;
@@ -214,27 +259,42 @@ public class FightSim {
         constraints.gridx = 1;
         constraints.gridy = 1;
         skillPanel.add(passiveDesc, constraints);
-        activeSkill.addActionListener(e -> setSkill(fighter, true, activeSkill, activeDesc));
-        passiveSkill.addActionListener(e -> setSkill(fighter, false, passiveSkill, passiveDesc));
+        activeSkill.addActionListener(e -> setSkill(fighter, true, activeSkill, activeDesc, readout));
+        passiveSkill.addActionListener(e -> setSkill(fighter, false, passiveSkill, passiveDesc, readout));
         return skillPanel;
     }
 
+    //Panel that displays the current stats of a fighter
     private static JTextArea battleStatPanel(Fighter fighter){
-        int[] cumstats = fighter.calcFinals();
-        JTextArea info = new JTextArea(String.format(
-                "%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n\n%-15s%2d/%2d\n%-15s%2d/%2d",
-                "Might:", cumstats[0], "Hit:", cumstats[1], "Avoid:", cumstats[2],
-                "Critical:", cumstats[3], "Critical Avoid:", cumstats[4],
-                "Stat Points:", fighter.calcPoints(), TOTALALLOWED,
-                "Weapon Points:", fighter.weapon.calcPoints(), WEAPONALLOWED
-        ));
+        JTextArea info = new JTextArea(battleStatText(fighter));
         info.setFont(new Font("Courier New", Font.PLAIN, 12));
         info.setSize(200,150);
         return info;
     }
 
+    private static String battleStatText(Fighter fighter){
+        int[] cumstats = fighter.calcFinals();
+        return String.format(
+                "%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n\n%-15s%2d/%2d\n%-15s%2d/%2d",
+                "Might:", cumstats[0], "Hit:", cumstats[1], "Avoid:", cumstats[2],
+                "Critical:", cumstats[3], "Critical Avoid:", cumstats[4],
+                "Stat Points:", fighter.calcPoints(), TOTALALLOWED,
+                "Weapon Points:", fighter.weapon.calcPoints(), WEAPONALLOWED
+        );
+
+    }
+
+    //Method that refreshes the BattleStat panel
     private static void refreshBattleStats(JTextArea battleStats, Fighter fighter){
         int[] cumstats = fighter.calcFinals();
+        ABILITY_MODULE.setAttacker(fighter);
+        ABILITY_MODULE.setDefender(fighter);
+        int[] passives = ABILITY_MODULE.passiveCall(fighter.abilities[ABILITY_MODULE.PASSIVE]);
+        cumstats[0] += passives[ABILITY_MODULE.DAMAGEUP];
+        cumstats[1] += passives[ABILITY_MODULE.HITUP];
+        cumstats[2] += passives[ABILITY_MODULE.AVOIDUP];
+        cumstats[3] += passives[ABILITY_MODULE.CRITUP];
+        cumstats[4] += passives[ABILITY_MODULE.DDGUP];
         battleStats.setText(String.format(
                 "%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n%-16s%4d\n\n%-15s%2d/%2d\n%-15s%2d/%2d",
                 "Might:", cumstats[0], "Hit:", cumstats[1], "Avoid:", cumstats[2],
@@ -252,8 +312,19 @@ public class FightSim {
         for(int i = 0; i < Fighter.NUMWSTATS; i++){
             weapon.add(statPanel(fighter, i, true, readout));
         }
-        weapon.setLayout(new GridLayout(4,1));
-        weapon.setSize(75,120);
+        JComboBox<String> weaponType = new JComboBox<>(new String[]{"Physical","Magical"});
+        weapon.add(weaponType);
+        weapon.setLayout(new GridLayout(5,1));
+        weaponType.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(weaponType.getItemAt(weaponType.getSelectedIndex()).equals("Physical")) {
+                    fighter.weapon.type = 0;
+                } else {
+                    fighter.weapon.type = 1;
+                }
+            }
+        });
         name.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -304,12 +375,12 @@ public class FightSim {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.gridheight = 4;
+        constraints.gridheight = 2;
         constraints.gridwidth = 2;
         stat.add(name, constraints);
         constraints.gridx = 2;
         constraints.gridy = 0;
-        constraints.gridheight = 4;
+        constraints.gridheight = 2;
         constraints.gridwidth = 2;
         stat.add(value, constraints);
         constraints.gridx = 4;
@@ -320,7 +391,6 @@ public class FightSim {
         constraints.gridx = 4;
         constraints.gridy = 1;
         stat.add(down, constraints);
-        stat.setSize(75,30);
         return stat;
     }
 
@@ -359,22 +429,12 @@ public class FightSim {
         //If num is 1 we're changing fighter2
         if(num == 1) {
             fighter2 = loadFighter(fighter1Select.getItemAt(fighter1Select.getSelectedIndex()).toString());
-            frame.remove(fighter2Stats);
-            fighter2Stats = fighterReadout(fighter2);
+            textAreaList.get(2).setText(fighter2.fighterData());
+            textAreaList.get(3).setText(battleStatText(fighter2));
         } else {
             fighter1 = loadFighter(fighter1Select.getItemAt(fighter1Select.getSelectedIndex()).toString());
-            frame.remove(fighter1Stats);
-            fighter1Stats = fighterReadout(fighter1);
-        }
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = num;
-        constraints.gridy = 1;
-        constraints.ipadx = 60;
-        constraints.ipady = 140;
-        if(num == 1) {
-            frame.add(fighter2Stats, constraints);
-        } else {
-            frame.add(fighter1Stats, constraints);
+            textAreaList.get(0).setText(fighter1.fighterData());
+            textAreaList.get(1).setText(battleStatText(fighter1));
         }
         frame.revalidate();
         frame.repaint();
@@ -383,36 +443,21 @@ public class FightSim {
     //Builds a panel that includes fighter stats
     private static JPanel fighterReadout(Fighter fighter){
         JPanel panel = new JPanel();
-        JLabel hp = new JLabel("HP");
-        JLabel str = new JLabel("STR");
-        JLabel skl = new JLabel("SKL");
-        JLabel spd = new JLabel("SPD");
-        JLabel luc = new JLabel("LUC");
-        JLabel def = new JLabel("DEF");
-        JLabel res = new JLabel("RES");
-        JTextField hpStat = new JTextField(fighter.hp() + "");
-        JTextField strStat = new JTextField(fighter.str() + "");
-        JTextField sklStat = new JTextField(fighter.skl() + "");
-        JTextField spdStat = new JTextField(fighter.spd() + "");
-        JTextField lucStat = new JTextField(fighter.luc() + "");
-        JTextField defStat = new JTextField(fighter.def() + "");
-        JTextField resStat = new JTextField(fighter.res() + "");
-        panel.add(hp);
-        panel.add(hpStat);
-        panel.add(str);
-        panel.add(strStat);
-        panel.add(skl);
-        panel.add(sklStat);
-        panel.add(spd);
-        panel.add(spdStat);
-        panel.add(luc);
-        panel.add(lucStat);
-        panel.add(def);
-        panel.add(defStat);
-        panel.add(res);
-        panel.add(resStat);
-        panel.setLayout(new GridLayout(7,2));
-        panel.setSize(60,140);
+        JTextArea readout = new JTextArea(fighter.fighterData());
+        readout.setFont(new Font("Courier New", Font.PLAIN, 12));
+        JTextArea battleStats = battleStatPanel(fighter);
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.ipady = 5;
+        panel.add(readout, constraints);
+        constraints.ipady = 5;
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        panel.add(battleStats, constraints);
+        textAreaList.add(readout);
+        textAreaList.add(battleStats);
         return panel;
     }
 
@@ -461,7 +506,7 @@ public class FightSim {
             throwError("Error reading the selected file");
             return null;
         }
-        String fighterName = lines.get(0).substring(lines.get(0).lastIndexOf(" "));
+        String fighterName = lines.get(0).substring(lines.get(0).lastIndexOf(" ")+1);
         int[] stats = new int[10];
         String[] abilities = new String[2];
         /*A for loop that looks at the lines in the fighter document that contain stats and adds the value after
@@ -474,261 +519,10 @@ public class FightSim {
         }
         abilities[0] = lines.get(15);
         abilities[1] = lines.get(16);
-        return new Fighter(stats, abilities, fighterName);
+        Fighter newFighter = new Fighter(stats, abilities, fighterName);
+        newFighter.weapon.type = Integer.parseInt(lines.get(10).substring(lines.get(10).lastIndexOf(' ') + 1));
+        return newFighter;
     }
-
-    private static String runSim() {
-        BattleStats f1 = new BattleStats(fighter1, fighter2);
-        BattleStats f2 = new BattleStats(fighter2, fighter1);
-        simulationText = new StringBuilder();
-        boolean doubles = false;
-        int first = 0;
-        if (f1.as > 0) {
-            if (f1.as >= 5) {
-                doubles = true;
-                first = 2;
-            }
-        } else if (f2.as > 0) {
-            first = 1;
-            if (f2.as >= 5) {
-                first = 3;
-            }
-        } else {
-            Random rand = new Random();
-            first = rand.nextInt(2);
-        }
-        BattleState f1state = new BattleState(fighter1, fighter2, doubles);
-        BattleState f2state = new BattleState(fighter2, fighter1, doubles);
-        if (first == 0) {
-            return noDoubles(f1state, f2state);
-        } else if(first == 2){
-            return doubles(f1state, f2state);
-        } else if(first == 1){
-            return noDoubles(f1state, f2state);
-        } else {
-            return doubles(f1state, f2state);
-        }
-    }
-
-    private static String noDoubles(BattleState f1state, BattleState f2state){
-        int roundCnt = 1;
-        while(f1state.fighterHP > 0 && f2state.fighterHP > 0){
-            roundHealing(f1state);
-            roundHealing(f2state);
-            simulationText.append(String.format("%s%d%s", "\nRound: ", roundCnt, "\n"));
-            roundCnt++;
-            attack(f1state, f2state);
-            if(f1state.fighterHP <= 0 ||f2state.fighterHP <= 0){
-                break;
-            }
-            attack(f2state, f1state);
-            damageOverTime(f1state, f2state);
-            damageOverTime(f2state, f1state);
-        }
-        if(f1state.fighterHP > 0){
-            simulationText.append(f1state.fighter.name);
-        } else {
-            simulationText.append(f2state.fighter.name);
-        }
-        simulationText.append(" wins!");
-        return simulationText.toString();
-    }
-    private static String doubles(BattleState f1state, BattleState f2state){
-        int roundCnt = 1;
-        while(f1state.fighterHP > 0 && f2state.fighterHP > 0){
-            roundHealing(f1state);
-            roundHealing(f2state);
-            simulationText.append(String.format("%s%d%s", "\nRound: ", roundCnt, "\n"));
-            roundCnt++;
-            attack(f1state, f2state);
-            if(f1state.fighterHP <= 0 ||f2state.fighterHP <= 0){
-                break;
-            }
-            attack(f2state, f1state);
-            if(f1state.fighterHP <= 0 ||f2state.fighterHP <= 0){
-                break;
-            }
-            attack(f1state, f2state);
-            damageOverTime(f1state, f2state);
-            damageOverTime(f2state, f1state);
-        }
-        if(f1state.fighterHP > 0){
-            simulationText.append(f1state.fighter.name);
-        } else {
-            simulationText.append(f2state.fighter.name);
-        }
-        simulationText.append(" wins!");
-        return simulationText.toString();
-    }
-
-    private static void attack(BattleState attacker, BattleState defender){
-        /* need to check hit, crit, and active skill.
-         * Need to make sure that passive skill modifiers exist on the units
-         * Some active skills are defensive active skills, need to check for those.
-         * Some active skills create effects that last for an entire round, need to make sure that those
-         * effects persist.
-         */
-
-        Random rand = new Random();
-        int hit = rand.nextInt(99);
-        int crit = rand.nextInt(99);
-        int activation = rand.nextInt(99);
-        String offensiveSkill = "";
-        String defensiveSkill = "";
-        String critical = "";
-        String connection = "Miss!";
-        String counter = "";
-        String recovery = "";
-        String selfDamage = "";
-        boolean defense = false;
-        boolean offense = false;
-        int damage = 0;
-
-        if(attacker.abilities.onAttack()){
-            if(activation < attacker.abilities.getActivation()){
-                attacker.active = attacker.abilities.activeCall();
-                attacker.duration = attacker.abilities.getDuration();
-                if(attacker.doubles){
-                    attacker.duration *= 2;
-                }
-                offense = true;
-                offensiveSkill = attacker.fighter.abilities[ABILITY_MODULE.ACTIVE].toUpperCase() + " ";
-            }
-        }
-        if(!defender.abilities.onAttack()){
-            activation = rand.nextInt(99);
-            if(activation < defender.abilities.getActivation()){
-                defender.active = defender.abilities.activeCall();
-                defender.duration = defender.abilities.getDuration();
-                defense = true;
-                if(attacker.doubles){
-                    defender.duration *= 2;
-                }
-                defensiveSkill = "(" + defender.fighter.name + " " +
-                        defender.fighter.abilities[ABILITY_MODULE.ACTIVE].toUpperCase() + ") ";
-            }
-        }
-        int hitThresh = attacker.stats.hit + attacker.active[ABILITY_MODULE.HITUP]
-                + attacker.passive[ABILITY_MODULE.HITUP] - defender.active[ABILITY_MODULE.AVOIDUP] -
-                defender.passive[ABILITY_MODULE.AVOIDUP];
-        if(hit < hitThresh){
-            connection = "Hit! ";
-            damage = attacker.stats.power + attacker.active[ABILITY_MODULE.DAMAGEUP]
-                    + attacker.passive[ABILITY_MODULE.DAMAGEUP] - defender.active[ABILITY_MODULE.DAMAGEREDUCTION] -
-                    defender.passive[ABILITY_MODULE.DAMAGEREDUCTION];
-            int critThresh = attacker.stats.crit + attacker.active[ABILITY_MODULE.CRITUP]
-                    + attacker.passive[ABILITY_MODULE.CRITUP] - defender.active[ABILITY_MODULE.DDGUP] -
-                    defender.passive[ABILITY_MODULE.DDGUP];
-            if((!offense || attacker.abilities.canCrit()) && crit < critThresh){
-                if(attacker.fighter.abilities[ABILITY_MODULE.PASSIVE].toLowerCase().equals("precision")){
-                    damage *= 3;
-                }
-                damage *= CRIT_MODIFIER;
-                critical = "CRITICAL ";
-            }
-            if(damage < 0){
-                damage = 0;
-            }
-            defender.fighterHP -= damage;
-            if(defense &&
-                    (defender.fighterHP > 0 && defender.fighter.abilities[ABILITY_MODULE.PASSIVE].equals("Counter"))){
-                counter = "\n" + defender.fighter.name +
-                        "COUNTERS! (" + damage/2 + "/" + attacker.fighterHP + ")\n";
-            }
-        }
-        if(attacker.active[ABILITY_MODULE.BONUSHEALING] != 0){
-            int healing = (damage*attacker.active[ABILITY_MODULE.BONUSHEALING])/100;
-            attacker.fighterHP += healing;
-            recovery = String.format("%s%s%d%s%d%s", attacker.fighter.name,
-                    " recovers ", healing, "HP! (", attacker.fighterHP, ")\n");
-        }
-        if(attacker.passive[ABILITY_MODULE.SELFDAMAGE] != 0){
-            attacker.fighterHP -= attacker.passive[ABILITY_MODULE.SELFDAMAGE];
-            selfDamage = String.format("%s%s%d%s%d%s", attacker.fighter.name, " hurts themselves for ",
-                    attacker.passive[ABILITY_MODULE.SELFDAMAGE], " damage. (", attacker.fighterHP, ")\n");
-        }
-
-        if(defender.fighter.abilities[ABILITY_MODULE.ACTIVE].toLowerCase().equals("guts") && defense){
-            if(defender.fighterHP <= 0) {
-                defender.fighterHP = defender.active[ABILITY_MODULE.BONUSHP];
-            } else {
-                defensiveSkill = "";
-            }
-        }
-
-        simulationText.append(String.format("%s%s%s%s%s%s%s%d%s%d%s%s%s\n%s", attacker.fighter.name, ": ",
-                defensiveSkill, offensiveSkill, critical,
-                connection, "(", damage, "/", defender.fighterHP, ")", selfDamage, recovery, counter));
-
-        if(attacker.duration > 0 && attacker.abilities.onAttack()){
-            attacker.duration--;
-        } else {
-            Arrays.fill(attacker.active, 0);
-        }
-
-    }
-
-    private static void roundHealing(BattleState attacker){
-        if(attacker.passive[ABILITY_MODULE.BONUSHEALING] != 0){
-            if(attacker.fighterHP < attacker.fighter.hp()){
-                attacker.fighterHP += attacker.passive[ABILITY_MODULE.BONUSHEALING];
-                if(attacker.fighterHP > attacker.fighter.hp()){
-                    attacker.fighterHP = attacker.fighter.hp();
-                }
-                simulationText.append(String.format("%s%s%s%d%s%d%s", "\n", attacker.fighter.name, " recovers ",
-                        attacker.passive[ABILITY_MODULE.BONUSHEALING], "HP (", attacker.fighterHP, ")\n"));
-            }
-        }
-    }
-
-    private static void damageOverTime(BattleState attacker, BattleState defender){
-        int damage = 0;
-        if(attacker.active[ABILITY_MODULE.DOT] != 0){
-            for(int i = 0; i < defender.damageOverTime.length; i++){
-                if(defender.damageOverTime[i] == 0){
-                    defender.damageOverTime[i] = 1;
-                    defender.damageOverTime[i]--;
-                }
-            }
-        }
-        for(int i = 0; i < defender.damageOverTime.length; i++){
-            if(defender.damageOverTime[i] > 0){
-                damage += attacker.active[ABILITY_MODULE.DOT];
-            }
-        }
-        defender.fighterHP -= damage;
-        if( damage > 0) {
-            simulationText.append(String.format("%s%s%s%d%s", "\n", defender.fighter.name, " takes ", damage,
-                    "from damage over time.\n"));
-        }
-    }
-
-    private static class BattleState{
-        int fighterHP;
-        int duration;
-        int[] damageOverTime;
-        Fighter fighter;
-        boolean doubles;
-        int attackNum;
-        AbilityModule abilities;
-        BattleStats stats;
-        int[] active;
-        int[] passive;
-        BattleState(Fighter fighter1, Fighter fighter2, boolean doubles){
-            this.fighterHP = fighter1.hp();
-            this.doubles = doubles;
-            this.fighter = fighter1;
-            this.attackNum = 0;
-            this.abilities = new AbilityModule(fighter1, fighter2, fighterHP, fighter2.hp());
-            this.stats = new BattleStats(fighter1, fighter2);
-            active = Arrays.copyOf(BASE, BASE.length);
-            passive = this.abilities.passiveCall();
-            damageOverTime = new int[] {0,0,0,0,0};
-        }
-    }
-
-
-
 
     private static String printReadout(BattleStats f1, BattleStats f2){
         return (String.format("%12s%15s\n", fighter1.name, fighter2.name))
