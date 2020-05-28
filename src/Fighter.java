@@ -10,6 +10,10 @@ public class Fighter
     final static int NUMWSTATS = 3;
     final static int HIT = 1;
     final static int CRIT = 2;
+    final static int HP = 0;
+    final static int HITINC = 5;
+    final static int HPINC = 5;
+    final static int CRITINC = 3;
     String name;
     String[] statNames = {"HP","Str","Skl","Spd","Luc","Def","Res", "Mt", "Hit", "Crit"};
     int[] fstats = new int[NUMSTATS];
@@ -48,6 +52,13 @@ public class Fighter
             int crit(){
                 return wstats[2];
             }
+
+            int calcPoints(){
+                int total = wstats[0];
+                total += wstats[HIT]/HITINC;
+                total += wstats[CRIT]/CRITINC;
+                return total;
+            }
     }
 
     /* Easy to return stats*/
@@ -74,13 +85,14 @@ public class Fighter
     }
 
 
-    Fighter() throws IOException{
-        getInput();
-        writeFile();
-    }
-
-    Fighter(boolean check){
-
+    Fighter(){
+        fstats[0] = 10;
+        for(int i = 1; i < fstats.length; i++){
+            fstats[i] = 10;
+        }
+        this.weapon.wstats[0] = 2;
+        this.weapon.wstats[1] = 70;
+        this.weapon.wstats[2] = 0;
     }
 
     Fighter(int[] stats, String[]abilities, String name){
@@ -93,6 +105,14 @@ public class Fighter
         }
         this.abilities[0] = abilities[0];
         this.abilities[1] = abilities[1];
+    }
+
+    int calcPoints(){
+        int total = fstats[0]/5;
+        for(int i = 1; i < fstats.length; i++){
+            total += fstats[i];
+        }
+        return total;
     }
 
     int[] calcFinals(){

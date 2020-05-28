@@ -1,6 +1,4 @@
-import java.util.HashMap;
-
-public class Class {
+class Class {
 
     //returns an array of all the classes.
     Class[] classList(){
@@ -23,12 +21,6 @@ public class Class {
                 )
 
         };
-    }
-
-    HashMap<String, String> classDesriptions(){
-        HashMap<String, String> out = new HashMap<>();
-        out.put("Patience", "");
-        return out;
     }
 
     String className;
