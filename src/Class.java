@@ -39,7 +39,7 @@ class Class {
         };
     }
 
-    String className;
+    private String className;
     String[] passiveSkills;
     String[] activeSkills;
 
@@ -47,7 +47,7 @@ class Class {
 
     }
 
-    Class(String className, String[] activeSkills, String[] passiveSkills){
+    private Class(String className, String[] activeSkills, String[] passiveSkills){
         this.className = className;
         this.passiveSkills = passiveSkills;
         this.activeSkills = activeSkills;

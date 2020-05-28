@@ -7,12 +7,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 class AbilityModule {
-    Fighter attacker;
-    Fighter defender;
-    int atkHP;
-    int defHP;
-    int activation;
-    int phase = 0;
+    private Fighter attacker;
+    private Fighter defender;
+    private int atkHP;
+    private int defHP;
+    private int activation;
     //returns an array of values of possible things that are effected
     /* key:
     0. bonus damage
@@ -39,69 +38,75 @@ class AbilityModule {
     final int DDGUP = 8;
     final int DOT = 9;
     final int[] BASE = {0,0,0,0,0,0,0,0,0,0};
-    private HashMap<String, Skill> skillMap = new HashMap<>();
+    private HashMap<String, ActiveSkill> activeSkillMap = new HashMap<>();
+    private HashMap<String, Skill> passiveSkillMap = new HashMap<>();
 
     int[] activeCall(){
-        return skillMap.get(attacker.abilities[ACTIVE].toLowerCase()).effect(attacker, defender);
+        return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).effect(attacker, defender);
     }
 
     int[] passiveCall(){
-        return skillMap.get(attacker.abilities[PASSIVE].toLowerCase()).effect(attacker, defender);
+        return passiveSkillMap.get(attacker.abilities[PASSIVE].toLowerCase()).effect(attacker, defender);
     }
 
     int getActivation(){
-        return skillMap.get(attacker.abilities[ACTIVE].toLowerCase()).activationRate(attacker, defender);
+        return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).activationRate(attacker, defender);
     }
 
     int getDuration(){
-        return skillMap.get(attacker.abilities[ACTIVE].toLowerCase()).duration();
+        return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).duration();
     }
 
     boolean canCrit(){
-        return skillMap.get(attacker.abilities[ACTIVE].toLowerCase()).canCrit();
+        return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).canCrit();
     }
 
     AbilityModule(){
-        buildMap();
+        buildActiveMap();
+        buildPassiveMap();
     }
 
     AbilityModule(Fighter attacker, Fighter defender, int atkHP, int defHP){
-        phase = 0;
         this.attacker = attacker;
         this.defender = defender;
         this.atkHP = atkHP;
         this.defHP = defHP;
-        buildMap();
+        buildActiveMap();
+        buildPassiveMap();
     }
 
-    void buildMap(){
-        skillMap.put("patience", new Patience());
-        skillMap.put("luna", new Luna());
-        skillMap.put("sol", new Sol());
-        skillMap.put("colossus", new Colossus());
-        skillMap.put("counter", new Counter());
-        skillMap.put("corona", new Corona());
-        skillMap.put("miracle", new Miracle());
-        skillMap.put("veteran", new Veteran());
-        skillMap.put("gamble", new Gamble());
-        skillMap.put("hp+", new HPUP());
-        skillMap.put("sacrifice", new Sacrifice());
-        skillMap.put("crit+", new CritUp());
-        skillMap.put("renewal", new Renewal());
-        skillMap.put("shield of faith", new ShieldOfFaith());
-        skillMap.put("guts", new Guts());
-        skillMap.put("slayer", new Slayer());
-        skillMap.put("axefaire", new Axefaire());
-        skillMap.put("pavise", new Pavise());
-        skillMap.put("panicdodge", new PanicDodge());
-        skillMap.put("savageblow", new SavageBlow());
-        skillMap.put("resolve", new Resolve());
-        skillMap.put("waryfighter", new WaryFighter());
-        skillMap.put("bonfire", new Bonfire());
-        skillMap.put("lethality", new Lethality());
-        skillMap.put("poisonedblade", new PoisonedBlade());
-        skillMap.put("avoid+", new AvoidUp());
-        skillMap.put("precision", new Precision());
+    private void buildActiveMap(){
+        
+        activeSkillMap.put("luna", new Luna());
+        activeSkillMap.put("sol", new Sol());
+        activeSkillMap.put("colossus", new Colossus());
+        activeSkillMap.put("counter", new Counter());
+        activeSkillMap.put("corona", new Corona());
+        activeSkillMap.put("miracle", new Miracle());
+        activeSkillMap.put("guts", new Guts());
+        activeSkillMap.put("slayer", new Slayer());
+        activeSkillMap.put("pavise", new Pavise());
+        activeSkillMap.put("savageblow", new SavageBlow());
+        activeSkillMap.put("bonfire", new Bonfire());
+        activeSkillMap.put("lethality", new Lethality());
+        activeSkillMap.put("poisonedblade", new PoisonedBlade());
+    }
+    
+    private void buildPassiveMap(){
+        passiveSkillMap.put("renewal", new Renewal());
+        passiveSkillMap.put("patience", new Patience());
+        passiveSkillMap.put("veteran", new Veteran());
+        passiveSkillMap.put("gamble", new Gamble());
+        passiveSkillMap.put("hp+", new HPUP());
+        passiveSkillMap.put("sacrifice", new Sacrifice());
+        passiveSkillMap.put("crit+", new CritUp());
+        passiveSkillMap.put("shield of faith", new ShieldOfFaith());
+        passiveSkillMap.put("axefaire", new Axefaire());
+        passiveSkillMap.put("panicdodge", new PanicDodge());
+        passiveSkillMap.put("resolve", new Resolve());
+        passiveSkillMap.put("waryfighter", new WaryFighter());
+        passiveSkillMap.put("avoid+", new AvoidUp());
+        passiveSkillMap.put("precision", new Precision());
     }
 
     void setAttacker(Fighter attacker){
@@ -113,16 +118,19 @@ class AbilityModule {
     }
 
     boolean onAttack(){
-        Skill skill = skillMap.get(attacker.abilities[ACTIVE].toLowerCase());
-        return skill.onAttack();
+        return activeSkillMap.get(attacker.abilities[ACTIVE].toLowerCase()).onAttack();
     }
 
 
     String skillDesc(String skillname){
-        return skillMap.get(skillname.toLowerCase()).desc();
+        Skill skill = activeSkillMap.get(skillname.toLowerCase());
+        if(skill == null){
+            return passiveSkillMap.get(skillname.toLowerCase()).desc();
+        }
+        return skill.desc();
     }
 
-    class Sol implements Skill{
+    class Sol implements ActiveSkill{
         Sol(){
         }
 
@@ -149,7 +157,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = attacker.skl()*2;
             out[BONUSHEALING] = 50;
             return out;
@@ -160,7 +168,7 @@ class AbilityModule {
         }
     }
 
-    class Slayer implements Skill{
+    class Slayer implements ActiveSkill{
         Slayer(){
         }
 
@@ -186,7 +194,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = attacker.skl();
             out[DAMAGEUP] = 10;
             out[HITUP] = 15;
@@ -198,7 +206,7 @@ class AbilityModule {
         }
     }
 
-    class Luna implements Skill{
+    class Luna implements ActiveSkill{
         Luna(){
         }
 
@@ -236,7 +244,7 @@ class AbilityModule {
         }
     }
 
-    class Colossus implements Skill{
+    class Colossus implements ActiveSkill{
         String name = "Colossus";
         Colossus(){
 
@@ -268,7 +276,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = attacker.str()*15/10;
             out[DAMAGEUP] = attacker.str()/2;
             return out;
@@ -279,7 +287,7 @@ class AbilityModule {
         }
     }
 
-    class Counter implements Skill{
+    class Counter implements ActiveSkill{
         Counter(){
 
         }
@@ -306,8 +314,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
-            phase = 1;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = attacker.str();
             out[DAMAGEUP] = (defender.str() + defender.weapon.mt())/2;
             return out;
@@ -318,7 +325,7 @@ class AbilityModule {
         }
     }
 
-    class Corona implements Skill{
+    class Corona implements ActiveSkill{
         String name = "Corona";
         Corona(){
 
@@ -349,8 +356,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
-            phase = 1;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = (attacker.str()*3)/2;
             out[AVOIDUP] = 30;
             return out;
@@ -361,7 +367,7 @@ class AbilityModule {
         }
     }
 
-    class Miracle implements Skill{
+    class Miracle implements ActiveSkill{
         String name = "Miracle";
         Miracle(){
 
@@ -392,7 +398,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = (attacker.hp() - atkHP)/2;
             out[DAMAGEREDUCTION] = defender.str()+defender.weapon.mt()-attacker.def() - 1;
             return out;
@@ -403,7 +409,7 @@ class AbilityModule {
         }
     }
 
-    class SavageBlow implements Skill{
+    class SavageBlow implements ActiveSkill{
         SavageBlow(){
         }
 
@@ -429,7 +435,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             activation = attacker.skl()*2;
             BattleStats stats = new BattleStats(attacker, defender, 1);
             if(stats.power < (defHP*23)/20){
@@ -443,7 +449,7 @@ class AbilityModule {
         }
     }
 
-    class Guts implements Skill{
+    class Guts implements ActiveSkill{
         Guts(){
         }
 
@@ -469,7 +475,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[BONUSHP] = attacker.hp()/5;
             return out;
         }
@@ -479,7 +485,7 @@ class AbilityModule {
         }
     }
 
-    class Pavise implements Skill{
+    class Pavise implements ActiveSkill{
         Pavise(){
         }
 
@@ -505,7 +511,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEREDUCTION] = 100000;
             return out;
         }
@@ -515,7 +521,7 @@ class AbilityModule {
         }
     }
 
-    class Lethality implements Skill{
+    class Lethality implements ActiveSkill{
         Lethality(){
         }
 
@@ -556,7 +562,7 @@ class AbilityModule {
         }
     }
 
-    class PoisonedBlade implements Skill{
+    class PoisonedBlade implements ActiveSkill{
         PoisonedBlade(){
         }
 
@@ -592,7 +598,7 @@ class AbilityModule {
         }
     }
 
-    class Bonfire implements Skill{
+    class Bonfire implements ActiveSkill{
         Bonfire(){
         }
 
@@ -619,7 +625,7 @@ class AbilityModule {
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEUP] = attacker.def()/5;
             return out;
         }
@@ -631,17 +637,8 @@ class AbilityModule {
 
     //Passives beyond
 
-    //If speed is lower than opponent, increase hit and avoid by 20
     class Patience implements Skill{
         Patience(){
-        }
-
-        public int duration(){
-            return 0;
-        }
-
-        public boolean onAttack(){
-            return false;
         }
 
         public String name(){
@@ -653,34 +650,18 @@ class AbilityModule {
                     "the opponent's, hit and avoid + 20";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             if(attacker.spd() < defender.spd()) {
                 out[HITUP] = 20;
                 out[AVOIDUP] = 20;
             }
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
     class Veteran implements Skill{
         Veteran(){
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -692,40 +673,19 @@ class AbilityModule {
                     "critical by 25";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
             activation = 100;
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEUP] = -4;
             out[CRITUP] = 25;
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
-    //Decrease hit by 25 and increase crit by 25
     class Gamble implements Skill{
         String name = "Gamble";
         Gamble(){
 
-        }
-
-        Gamble(String name){
-            this.name = name;
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -737,39 +697,18 @@ class AbilityModule {
                     "critical by 25";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[HITUP] = -25;
             out[CRITUP] = 25;
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
-    //Increases HP by 25
     class HPUP implements Skill{
         String name = "HP+";
         HPUP(){
 
-        }
-
-        HPUP(String name){
-            this.name = name;
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -780,18 +719,10 @@ class AbilityModule {
             return "Increases HP by 25";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[BONUSHP] = 25;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
@@ -799,18 +730,6 @@ class AbilityModule {
         String name = "Sacrifice";
         Sacrifice(){
 
-        }
-
-        Sacrifice(String name){
-            this.name = name;
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -822,19 +741,11 @@ class AbilityModule {
                     "at the cost of 1/8 HP each turn";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEUP] = attacker.str() / 4;
             out[SELFDAMAGE] = attacker.hp() / 8;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
@@ -842,18 +753,6 @@ class AbilityModule {
         String name = "Crit+";
         CritUp(){
 
-        }
-
-        CritUp(String name){
-            this.name = name;
-        }
-
-        public int duration(){
-            return 0;
-        }
-
-        public boolean onAttack(){
-            return false;
         }
 
         public String name(){
@@ -864,18 +763,10 @@ class AbilityModule {
             return "Increases critical by 15";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[CRITUP] = 15;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
@@ -884,19 +775,7 @@ class AbilityModule {
         Renewal(){
 
         }
-
-        public int duration(){
-            return 0;
-        }
-
-        Renewal(String name){
-            this.name = name;
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
+        
         public String name(){
             return name;
         }
@@ -905,18 +784,10 @@ class AbilityModule {
             return "Heals 1/10 HP every turn";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
-        public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
-            out[BONUSHEALING] = attacker.hp()/10;
+        public int[] effect(Fighter attacker, Fighter defender) {
+            int[] out = Arrays.copyOf(BASE, BASE.length);
+            out[BONUSHEALING] = attacker.hp() / 10;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
@@ -924,18 +795,6 @@ class AbilityModule {
         String name = "ShieldOfFaith";
         ShieldOfFaith(){
 
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
-        }
-
-        ShieldOfFaith(String name){
-            this.name = name;
         }
 
         public String name(){
@@ -946,33 +805,17 @@ class AbilityModule {
             return "Reduces damage based on luck";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEREDUCTION] = attacker.luc();
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
     class PanicDodge implements Skill{
         PanicDodge(){
         }
-
-        public boolean onAttack(){
-            return true;
-        }
-
-        public int duration(){
-            return 0;
-        }
-
+        
         public String name(){
             return "Panic Dodge";
         }
@@ -982,34 +825,18 @@ class AbilityModule {
                     "when under 33% health";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             if(atkHP < attacker.hp()/3) {
                 out[DDGUP] = 20;
                 out[AVOIDUP] = 20;
             }
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return attacker.skl()*2;
-        }
     }
 
     class Axefaire implements Skill{
         Axefaire(){
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -1021,33 +848,17 @@ class AbilityModule {
                     "invested in strength";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
-            int[] out = Arrays.copyOf(BASE, BASE.length);;
+            int[] out = Arrays.copyOf(BASE, BASE.length);
             out[HITUP] = attacker.str()*5 - 15;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 
     class Resolve implements Skill{
         Resolve(){
         }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
-        }
-
+        
         public String name(){
             return "Resolve";
         }
@@ -1055,10 +866,6 @@ class AbilityModule {
         public String desc(){
             return "Increases strength, skill, and speed\n" +
                     "by 5 while under 50% HP.";
-        }
-
-        public boolean canCrit(){
-            return false;
         }
 
         public int[] effect(Fighter attacker, Fighter defender){
@@ -1071,22 +878,10 @@ class AbilityModule {
             }
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
     class WaryFighter implements Skill{
         WaryFighter(){
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -1099,10 +894,6 @@ class AbilityModule {
                     "opponents you outspeed.";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
             int[] out = Arrays.copyOf(BASE, BASE.length);
             out[DAMAGEREDUCTION] = ((defender.spd() - attacker.spd())*5)/2;
@@ -1112,24 +903,12 @@ class AbilityModule {
             }
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
     class AvoidUp implements Skill{
         AvoidUp(){
         }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
-        }
-
+        
         public String name(){
             return "Avoid+";
         }
@@ -1138,31 +917,15 @@ class AbilityModule {
             return "Increases avoid by 20";
         }
 
-        public boolean canCrit(){
-            return false;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
             int[] out = Arrays.copyOf(BASE, BASE.length);
             out[AVOIDUP] = 20;
             return out;
         }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
-        }
     }
 
     class Precision implements Skill{
         Precision(){
-        }
-
-        public boolean onAttack(){
-            return false;
-        }
-
-        public int duration(){
-            return 0;
         }
 
         public String name(){
@@ -1174,18 +937,10 @@ class AbilityModule {
                     "by criticals";
         }
 
-        public boolean canCrit(){
-            return true;
-        }
-
         public int[] effect(Fighter attacker, Fighter defender){
             int[] out = Arrays.copyOf(BASE, BASE.length);
             out[AVOIDUP] = 20;
             return out;
-        }
-
-        public int activationRate(Fighter attacker, Fighter defender){
-            return 100;
         }
     }
 

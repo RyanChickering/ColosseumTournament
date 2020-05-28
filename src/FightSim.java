@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.io.File;
@@ -19,8 +18,6 @@ import java.util.Random;
 public class FightSim {
     private static Fighter fighter1;
     private static Fighter fighter2;
-    private static int f1HP;
-    private static int f2HP;
     private static JPanel fighter1Stats;
     private static JPanel fighter2Stats;
     private static JComboBox<String> fighter1Select;
@@ -505,13 +502,10 @@ public class FightSim {
         if (first == 0) {
             return noDoubles(f1state, f2state);
         } else if(first == 2){
-            BattleState state = new BattleState(fighter1, fighter2, doubles);
             return doubles(f1state, f2state);
         } else if(first == 1){
-            BattleState state = new BattleState(fighter2, fighter1, doubles);
             return noDoubles(f1state, f2state);
         } else {
-            BattleState state = new BattleState(fighter2, fighter1, doubles);
             return doubles(f1state, f2state);
         }
     }
@@ -737,10 +731,9 @@ public class FightSim {
 
 
     private static String printReadout(BattleStats f1, BattleStats f2){
-        String out =(String.format("%12s%15s\n", fighter1.name, fighter2.name))
+        return (String.format("%12s%15s\n", fighter1.name, fighter2.name))
                 + (String.format("%-4s:%7s%s%-4s:%7s\n", "MT", f1.power, "   ", "MT", f2.power))
                 + (String.format("%-4s:%7s%s%-4s:%7s\n", "Hit", f1.hit, "   ", "Hit", f2.hit))
                 + (String.format("%-4s:%7s%s%-4s:%7s\n", "Crit", f1.crit, "   ", "Crit", f2.crit));
-        return out;
     }
 }
