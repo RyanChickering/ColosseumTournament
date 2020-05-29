@@ -17,10 +17,11 @@ public class Fighter
     String name;
     String[] statNames = {"HP","Str","Skl","Spd","Luc","Def","Res", "Mt", "Hit", "Crit"};
     int[] fstats = new int[NUMSTATS];
-    int[] cumstats = new int[5];
+    private int[] cumstats = new int[5];
     String[] abilities = new String[2];
     Weapon weapon = new Weapon(0,0,0);
 
+    //Internal class that has the parameters of a character's weapon
     public class Weapon{
         int[] wstats = new int[3];
         String[] wnames = {"Mt", "Hit", "Crit"};
@@ -85,6 +86,7 @@ public class Fighter
     }
 
 
+    //Default constructor
     Fighter(){
         fstats[0] = 10;
         for(int i = 1; i < fstats.length; i++){
@@ -96,11 +98,10 @@ public class Fighter
         this.name = "Enter a name";
     }
 
+    //Constructor that takes parameters
     Fighter(int[] stats, String[]abilities, String name){
         this.name = name;
-        for(int i = 0; i < 7; i++) {
-            fstats[i] = stats[i];
-        }
+        fstats = Arrays.copyOf(stats, 7);
         for(int i = 7; i < 10; i++){
             weapon.wstats[(i-7)] = stats[i];
         }
@@ -108,6 +109,7 @@ public class Fighter
         this.abilities[1] = abilities[1];
     }
 
+    //Calculates the total number of stat points used in a fighter's build
     int calcPoints(){
         int total = fstats[0]/5;
         for(int i = 1; i < fstats.length; i++){
@@ -116,6 +118,7 @@ public class Fighter
         return total;
     }
 
+    //Calculates combined statistics for a fighter
     int[] calcFinals(){
         //total might
         cumstats[0] = this.str() + this.weapon.mt();
@@ -130,6 +133,7 @@ public class Fighter
         return cumstats;
     }
 
+    //Method to get input when running as a command line program
     private void getInput()
     {
         Scanner scan = new Scanner(System.in);
@@ -158,26 +162,29 @@ public class Fighter
 
     }
 
+    //Method to save a fighter object as a file
     void writeFile() throws IOException
     {
+        //Gets the Fighter Directory
         String charDirectory = System.getProperty("user.dir") + "/Fighters";
-        File filePath = new File(charDirectory);
-        File charFolder = new File("Characters");
         String wroteFilePath = charDirectory + "/" + name + ".txt";
-        System.out.println(System.getProperty("user.dir"));
         PrintWriter printer = new PrintWriter(wroteFilePath, "UTF-8");
+        //Prints the fighter name to the file
         printer.println(String.format("%-4s:%10s","Name",name));
+        //Prints the 7 main stats to the file
         for(int i = 0; i<7;i++)
         {
             printer.println(String.format("%-4s:%10d",statNames[i],fstats[i] ));
 
         }
+        //Prints out the weapon information to the file
         printer.println(String.format("%-4s:%10s","Weapon", weapon.name));
         printer.println(String.format("%-4s:%10s","Type", weapon.type));
         printer.println(String.format("%-4s:%10s","Mt",weapon.mt()));
         printer.println(String.format("%-4s:%10s","Hit",weapon.hit()));
         printer.println(String.format("%-4s:%10s","Crit",weapon.crit()));
         printer.println(String.format("%-4s:%10s","Text",weapon.flavor));
+        //Prints the abilities to the file
         printer.println("Abilities:");
         printer.println(abilities[0]);
         printer.println(abilities[1]);
@@ -187,14 +194,15 @@ public class Fighter
     @Override
     public String toString()
     {
-        String out = "";
+        StringBuilder out = new StringBuilder();
         for(int i = 0; i < 6; i++)
         {
-            out += statNames[i] + " = " + fstats[i] + " " + "\n";
+            out.append(String.format("%s%s%d%s", statNames[i], " = ", fstats[i], " \n"));
         }
-        return out;
+        return out.toString();
     }
 
+    //Returns a string of the stats and abilities of a fighter.
     String fighterData(){
         return String.format("%-10s%10d%-10s%11d%-10s%11d" +
                         "%-10s%11d%-10s%11d%-10s%11d" +
